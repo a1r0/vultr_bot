@@ -6,7 +6,7 @@ import json
 import logging
 import requests
 from hurry.filesize import size, verbose
-from userprofile import User
+from vultr_data import User
 from config import vultr_key , telegram_api_key , instance_id
 
 from telegram import ReplyKeyboardMarkup, Update, ReplyKeyboardRemove
