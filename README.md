@@ -3,8 +3,8 @@
 ![GitHub last commit](https://img.shields.io/github/last-commit/a1r0/vultr_bot)
 ![GitHub Workflow Status](https://img.shields.io/github/workflow/status/a1r0/vultr_bot/Deploy)
 
-Installation procedure on Linux
-======
+## Installation procedure on Linux
+
     1. Setup python language on youre machine first.
     2. Install dependencies manually (will automate this in the future)
     ```bash
