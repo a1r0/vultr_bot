@@ -8,7 +8,7 @@
 1. Setup python language on youre machine first.
 2. Install a few dependencies _(will automate this in the future)_
     ```bash
-    pip install python-telegram-bot && pip install hurry.filesize
+    pip install -m requirements.txt
     ```
 3. Create config.py file and fill it with the following lines:
     ```pyhton
