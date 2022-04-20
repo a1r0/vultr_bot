@@ -1,16 +1,14 @@
 import json
 import requests
-from config import vultr_key
-
+from vps_config import vultr_key,instance_id
 class Instance:
     pass
+URL = 'https://api.vultr.com/v2/instances/'
+headers = {'Authorization': 'Bearer {}'.format(vultr_key),
+            'Content-Type': 'application/json'}
 
 def list_instances() -> dict:
-    url = 'https://api.vultr.com/v2/instances'
-    headers = {'Authorization': 'Bearer {}'.format(vultr_key),
-                'Content-Type': 'application/json'}
-
-    response = requests.get(url, headers=headers)
+    response = requests.get(URL, headers=headers)
     data = json.loads(response.text)
     for instances in data['instances']:
         instance = {
@@ -26,4 +24,16 @@ def list_instances() -> dict:
             'power_status':instances['power_status']
         }
         return instance
-print(list_instances())
+
+def get_instance_bandwidth() -> dict:
+    response = requests.get(URL + '{}/bandwidth'.format(instance_id),headers)
+    data = json.loads(response.text)
+    for bandwidth in data['bandwidth']:
+        bandwidth = {
+            'server_date': {
+                'incoming_bytes':bandwidth['incoming_bytes'],
+                'outgoing_bytes':bandwidth['outgoing_bytes']
+            }
+        }
+    return bandwidth
+print(get_instance_bandwidth())
