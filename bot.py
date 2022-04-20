@@ -5,9 +5,10 @@
 import json
 import logging
 import requests
-from hurry.filesize import size, verbose
-from plugins.user_service import User
-from vps_config import vultr_key , telegram_api_key , instance_id
+import hurry.filesize
+import vps_config as cfg
+import plugins.user_service as user_service
+import plugins.instance_service as instance_service
 
 from telegram import ReplyKeyboardMarkup, Update, ReplyKeyboardRemove
 from telegram.ext import (
@@ -19,7 +20,8 @@ from telegram.ext import (
     ConversationHandler
 )
 
-user = User()
+user = user_service.User()
+instance = instance_service.Instance()
 
 # Enable logging
 logging.basicConfig(
@@ -75,8 +77,8 @@ def get_profile_info(update: Update,context: CallbackContext) -> int:
 
 def get_vultr_info(update: Update, context: CallbackContext) -> int:
     logger.info('Method get_vultr was executed')
-    url = 'https://api.vultr.com/v2/instances/{}/bandwidth'.format(instance_id)
-    headers = {'Authorization': 'Bearer {}'.format(vultr_key),
+    url = 'https://api.vultr.com/v2/instances/{}/bandwidth'.format(cfg.api_keys['INSTANCE_ID'])
+    headers = {'Authorization': 'Bearer {}'.format(cfg.api_keys['VULTR_KEY']),
                'Content-Type': 'application/json'}
 
     data = {
@@ -112,8 +114,8 @@ def convert_data(update: Update, context: CallbackContext) -> int:
             incoming_bytes = JSON_DATA['bandwidth'][str(i)]['incoming_bytes']
             outcoming_bytes = JSON_DATA['bandwidth'][str(i)]['outgoing_bytes']
             update.message.reply_text(
-                '⬇️ ' + size(incoming_bytes, system=verbose) + ' \n' +
-                '⬆️ ' + size(outcoming_bytes, system=verbose)
+                '⬇️ ' + hurry.filesize.size(incoming_bytes, system=hurry.filesize.verbose) + ' \n' +
+                '⬆️ ' + hurry.filesize.size(outcoming_bytes, system=hurry.filesize.verbose)
             )
     update.message.reply_text(
         'Wanna finish or take another measure ?',
@@ -125,7 +127,7 @@ def main() -> None:
     '''Start the bot.'''
 
     # Create the Updater and pass it your bot's token.
-    updater = Updater(telegram_api_key)
+    updater = Updater(cfg.api_keys['TELEGRAM_API_KEY'])
 
     # Get the dispatcher to register handlers
     dispatcher = updater.dispatcher
