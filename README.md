@@ -16,6 +16,7 @@
     telegram_api_key = 'yours telegram api key'
     instance_id = ''
     ```
+    Example and detail are shared in the **vps_config_example.py** file
 4. Copy this repository whatever you want and run the **bot.py** file. 
 
 Telegram bot which works with VULTR API
