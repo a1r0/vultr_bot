@@ -1,6 +1,6 @@
 import json
 import requests
-from config import vultr_key
+from vps_config import vultr_key
 
 class User:
     pass

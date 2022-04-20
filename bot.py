@@ -7,7 +7,7 @@ import logging
 import requests
 from hurry.filesize import size, verbose
 from plugins.user_service import User
-from config import vultr_key , telegram_api_key , instance_id
+from vps_config import vultr_key , telegram_api_key , instance_id
 
 from telegram import ReplyKeyboardMarkup, Update, ReplyKeyboardRemove
 from telegram.ext import (
