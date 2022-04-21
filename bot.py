@@ -6,10 +6,6 @@ import json
 import logging
 import requests
 import hurry.filesize
-import vps_config as cfg
-import plugins.user_service as user_service
-import plugins.instance_service as instance_service
-
 from telegram import ReplyKeyboardMarkup, Update, ReplyKeyboardRemove
 from telegram.ext import (
     Updater,
@@ -19,9 +15,12 @@ from telegram.ext import (
     CallbackContext,
     ConversationHandler
 )
+import vps_config as cfg
+import plugins.user_service as user_service
+import plugins.instance_service as instance_service
 
-user = user_service.User()
-instance = instance_service.Instance()
+user_service = user_service.User()
+instance_service = instance_service.Instance()
 
 # Enable logging
 logging.basicConfig(
@@ -30,7 +29,7 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-GET_BANDWIDTH, CONVERT_DATA , GET_PROFILE_INFO = range(3)
+GET_BANDWIDTH, CONVERT_DATA, GET_PROFILE_INFO = range(3)
 JSON_DATA = None
 
 
@@ -38,7 +37,7 @@ JSON_DATA = None
 # context.
 def start(update: Update, context: CallbackContext) -> int:
     '''Send a message when the command /start is issued.'''
-    reply_keyboard = [['Get bandwidth'] ,['Get profile info'], ['Cancel']]
+    reply_keyboard = [['Get bandwidth'], ['Get profile info'], ['Cancel']]
     update.message.reply_text(
         'Hi! I am admin here. I will hold a conversation with you. '
         'Send /cancel to stop talking to me.\n\n'
@@ -65,10 +64,13 @@ def cancel(update: Update, context: CallbackContext) -> int:
 
     return ConversationHandler.END
 
-def get_profile_info(update: Update,context: CallbackContext) -> int:
+
+def get_profile_info(update: Update, context: CallbackContext) -> int:
     reply_keyboard = [['Get bandwidth', 'Cancel']]
     logger.info('Getting user info')
-    update.message.reply_text(f'{user.get_user_email()} \n {user.get_user_name()} \n {user.get_user_userid()}' ,reply_markup=ReplyKeyboardRemove())
+    update.message.reply_text(
+        f'{user_service.get_user_email()}\n{user_service.get_user_name()}\n{user_service.get_user_userid()}',
+        reply_markup=ReplyKeyboardRemove())
     update.message.reply_text(
         'Wanna finish or take another measure ?',
         reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, input_field_placeholder=''))
@@ -77,7 +79,8 @@ def get_profile_info(update: Update,context: CallbackContext) -> int:
 
 def get_vultr_info(update: Update, context: CallbackContext) -> int:
     logger.info('Method get_vultr was executed')
-    url = 'https://api.vultr.com/v2/instances/{}/bandwidth'.format(cfg.api_keys['INSTANCE_ID'])
+    url = 'https://api.vultr.com/v2/instances/{}/bandwidth'.format(
+        cfg.api_keys['INSTANCE_ID'])
     headers = {'Authorization': 'Bearer {}'.format(cfg.api_keys['VULTR_KEY']),
                'Content-Type': 'application/json'}
 
@@ -106,7 +109,7 @@ def convert_data(update: Update, context: CallbackContext) -> int:
     global JSON_DATA
     global incoming_bytes
     global outcoming_bytes
-    reply_keyboard = [['Get bandwidth', 'Get profile info']]
+    reply_keyboard = [['Get bandwidth', 'Get profile info' , 'Cancel']]
     logger.info('Method convert_data was executed')
     data = update.message.text
     for i in JSON_DATA['bandwidth']:
@@ -115,7 +118,9 @@ def convert_data(update: Update, context: CallbackContext) -> int:
             outcoming_bytes = JSON_DATA['bandwidth'][str(i)]['outgoing_bytes']
             update.message.reply_text(
                 '⬇️ ' + hurry.filesize.size(incoming_bytes, system=hurry.filesize.verbose) + ' \n' +
-                '⬆️ ' + hurry.filesize.size(outcoming_bytes, system=hurry.filesize.verbose)
+                '⬆️ ' +
+                hurry.filesize.size(
+                    outcoming_bytes, system=hurry.filesize.verbose)
             )
     update.message.reply_text(
         'Wanna finish or take another measure ?',
@@ -136,11 +141,13 @@ def main() -> None:
         entry_points=[CommandHandler('start', start)],
         states={
             GET_BANDWIDTH: [
-                MessageHandler(Filters.regex('^(Get profile info)$'), get_profile_info),
-                MessageHandler(Filters.regex('^(Get bandwidth)$'), get_vultr_info),
+                MessageHandler(Filters.regex(
+                    '^(Get profile info)$'), get_profile_info),
+                MessageHandler(Filters.regex(
+                    '^(Get bandwidth)$'), get_vultr_info),
                 MessageHandler(Filters.regex('^(Cancel)$'), cancel)
-                ],
-                
+            ],
+
             CONVERT_DATA: [MessageHandler(Filters.regex(
                 '^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$'
             ), convert_data)],
@@ -151,7 +158,8 @@ def main() -> None:
     # on different commands - answer in Telegram
     dispatcher.add_handler(CommandHandler('help', help_command))
     dispatcher.add_handler(CommandHandler('get_vultr_info', get_vultr_info))
-    dispatcher.add_handler(CommandHandler('get_profile_info',get_profile_info))
+    dispatcher.add_handler(CommandHandler(
+        'get_profile_info', get_profile_info))
     dispatcher.add_handler(conv_handler)
 
     # Start the Bot
