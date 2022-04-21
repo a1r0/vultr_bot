@@ -37,7 +37,8 @@ JSON_DATA = None
 # context.
 def start(update: Update, context: CallbackContext) -> int:
     '''Send a message when the command /start is issued.'''
-    reply_keyboard = [['Get bandwidth'], ['Get profile info'], ['Cancel']]
+    reply_keyboard = [['Get bandwidth'], [
+        'Get profile info'], ['List instances'], ['Cancel']]
     update.message.reply_text(
         'Hi! I am admin here. I will hold a conversation with you. '
         'Send /cancel to stop talking to me.\n\n'
@@ -109,7 +110,7 @@ def convert_data(update: Update, context: CallbackContext) -> int:
     global JSON_DATA
     global incoming_bytes
     global outcoming_bytes
-    reply_keyboard = [['Get bandwidth', 'Get profile info' , 'Cancel']]
+    reply_keyboard = [['Get bandwidth', 'Get profile info', 'Cancel']]
     logger.info('Method convert_data was executed')
     data = update.message.text
     for i in JSON_DATA['bandwidth']:
@@ -125,6 +126,29 @@ def convert_data(update: Update, context: CallbackContext) -> int:
     update.message.reply_text(
         'Wanna finish or take another measure ?',
         reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, input_field_placeholder=''))
+    return GET_BANDWIDTH
+
+# TODO make list readable and update id with OS names only
+def get_instance_list(update: Update, context: CallbackContext):
+    reply_keyboard = [[], ['Cancel']]
+    for i in instance_service.list_instances():
+        reply_keyboard[0].append(i.get('id'))
+        print(i.get('id'))
+    update.message.reply_text('Select prefferable instance',
+                              reply_markup=ReplyKeyboardMarkup(reply_keyboard, 
+                                                               one_time_keyboard=True, 
+                                                               input_field_placeholder=''))
+    return GET_BANDWIDTH
+
+# TODO: Make 
+def get_instance_properties(update: Update, context: CallbackContext):
+    reply_keyboard = [['List instances'], ['Cancel']]
+    text = json.dumps(instance_service.get_instance_info(update.message.text))
+    update.message.reply_text(text,
+                              reply_markup=ReplyKeyboardMarkup(
+                                                               reply_keyboard, 
+                                                               one_time_keyboard=True,
+                                                               input_field_placeholder=''))
     return GET_BANDWIDTH
 
 
@@ -145,7 +169,10 @@ def main() -> None:
                     '^(Get profile info)$'), get_profile_info),
                 MessageHandler(Filters.regex(
                     '^(Get bandwidth)$'), get_vultr_info),
-                MessageHandler(Filters.regex('^(Cancel)$'), cancel)
+                MessageHandler(Filters.regex(
+                    '^(List instances)$'), get_instance_list),
+                MessageHandler(Filters.regex('^(Cancel)$'), cancel),
+                MessageHandler(Filters.regex('(\w+)'),get_instance_properties)
             ],
 
             CONVERT_DATA: [MessageHandler(Filters.regex(
