@@ -1,9 +1,9 @@
 import json
 import requests
 import vps_config as cfg
-
 class User:
 
+    @staticmethod
     def load_user_profile() -> dict:
         url = 'https://api.vultr.com/v2/users'
         headers = {'Authorization': 'Bearer {}'.format(cfg.api_keys['VULTR_KEY']),
@@ -19,15 +19,18 @@ class User:
             }
             return userprofile
 
-    def get_user_name(self) -> str:
+    @staticmethod
+    def get_user_name() -> str:
         userprofile = User.load_user_profile()
         return userprofile['name']
 
-    def get_user_userid(self) -> str:
+    @staticmethod
+    def get_user_userid() -> str:
         userprofile = User.load_user_profile()
         return userprofile['id']
 
-    def get_user_email(self) -> str:
+    @staticmethod
+    def get_user_email() -> str:
         userprofile = User.load_user_profile()
         return userprofile['email']
 
