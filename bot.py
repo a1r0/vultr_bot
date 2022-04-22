@@ -2,7 +2,6 @@
 # pylint: disable=C0116,W0613
 # This program is dedicated to the public domain under the CC0 license.
 
-from http import server
 import json
 import logging
 import requests
@@ -182,8 +181,6 @@ def main() -> None:
         fallbacks=[CommandHandler('cancel', cancel)],
     )
 
-    # on different commands - answer in Telegram
-    dispatcher.add_handler(CommandHandler('help', help_command))
     dispatcher.add_handler(CommandHandler('get_vultr_info', get_vultr_info))
     dispatcher.add_handler(CommandHandler(
         'get_profile_info', get_profile_info))
