@@ -37,23 +37,20 @@ JSON_DATA = None
 # context.
 def start(update: Update, context: CallbackContext) -> int:
     '''Send a message when the command /start is issued.'''
-    reply_keyboard = [['Get bandwidth'], [
-        'Get profile info'], ['List instances'], ['Cancel']]
+    reply_keyboard = [
+        ['Get bandwidth'],
+        ['Get profile info'],
+        ['List instances'],
+        ['Cancel']]
     update.message.reply_text(
         'Hi! I am admin here. I will hold a conversation with you. '
         'Send /cancel to stop talking to me.\n\n'
-        'Do you want to get server data for some day? ',
+        'Wnat do you want for today? ',
         reply_markup=ReplyKeyboardMarkup(
             reply_keyboard, one_time_keyboard=True, input_field_placeholder=''
         ),
     )
     return GET_BANDWIDTH
-
-
-def help_command(update: Update, context: CallbackContext) -> None:
-    '''Send a message when the command /help is issued.'''
-    update.message.reply_text('Help!')
-
 
 def cancel(update: Update, context: CallbackContext) -> int:
     '''Cancels and ends the conversation.'''
@@ -125,7 +122,9 @@ def convert_data(update: Update, context: CallbackContext) -> int:
             )
     update.message.reply_text(
         'Wanna finish or take another measure ?',
-        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, input_field_placeholder=''))
+        reply_markup=ReplyKeyboardMarkup(reply_keyboard,
+                                         one_time_keyboard=True,
+                                         input_field_placeholder=''))
     return GET_BANDWIDTH
 
 # TODO make list readable and update id with OS names only
@@ -135,8 +134,8 @@ def get_instance_list(update: Update, context: CallbackContext):
         reply_keyboard[0].append(i.get('id'))
         print(i.get('id'))
     update.message.reply_text('Select prefferable instance',
-                              reply_markup=ReplyKeyboardMarkup(reply_keyboard, 
-                                                               one_time_keyboard=True, 
+                              reply_markup=ReplyKeyboardMarkup(reply_keyboard,
+                                                               one_time_keyboard=True,
                                                                input_field_placeholder=''))
     return GET_BANDWIDTH
 
@@ -146,7 +145,7 @@ def get_instance_properties(update: Update, context: CallbackContext):
     text = json.dumps(instance_service.get_instance_info(update.message.text))
     update.message.reply_text(text,
                               reply_markup=ReplyKeyboardMarkup(
-                                                               reply_keyboard, 
+                                                               reply_keyboard,
                                                                one_time_keyboard=True,
                                                                input_field_placeholder=''))
     return GET_BANDWIDTH
@@ -196,7 +195,6 @@ def main() -> None:
     # SIGTERM or SIGABRT. This should be used most of the time, since
     # start_polling() is non-blocking and will stop the bot gracefully.
     updater.idle()
-
 
 if __name__ == '__main__':
     main()
