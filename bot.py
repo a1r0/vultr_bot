@@ -187,19 +187,7 @@ def main() -> None:
     dispatcher.add_handler(conv_handler)
 
     # Start the Bot
-<<<<<<< HEAD
-    # updater.start_polling()
-    updater.start_webhook(
-        listen='0.0.0.0',
-        port=8443,
-        url_path='TOKEN',
-        key='private.key',
-        cert='cert.pem',
-        webhook_url='https://rdbl.xyz:8443/TOKEN'
-        )
-=======
     updater.start_polling()
->>>>>>> parent of b3314ab (add webhook options)
 
     # Run the bot until you press Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT. This should be used most of the time, since
