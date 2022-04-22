@@ -193,7 +193,7 @@ def main() -> None:
         port=8443,
         url_path='TOKEN',
         key='private.key',
-        cert='cert.crt',
+        cert='cert.pem',
         webhook_url='https://rdbl.xyz:8443/TOKEN'
         )
 
