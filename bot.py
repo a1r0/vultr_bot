@@ -2,6 +2,7 @@
 # pylint: disable=C0116,W0613
 # This program is dedicated to the public domain under the CC0 license.
 
+from http import server
 import json
 import logging
 import requests
@@ -189,7 +190,15 @@ def main() -> None:
     dispatcher.add_handler(conv_handler)
 
     # Start the Bot
-    updater.start_polling()
+    # updater.start_polling()
+    updater.start_webhook(
+        listen='0.0.0.0',
+        port=8443,
+        url_path='TOKEN',
+        key='server.key',
+        cert='server.crt',
+        webhook_url='https://rdbl.xyz:8443/TOKEN'
+        )
 
     # Run the bot until you press Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT. This should be used most of the time, since
