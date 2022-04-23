@@ -131,8 +131,7 @@ def convert_data(update: Update, context: CallbackContext) -> int:
 def get_instance_list(update: Update, context: CallbackContext):
     reply_keyboard = [[], ['Cancel']]
     for i in instance_service.list_instances():
-        reply_keyboard[0].append(i.get('id'))
-        print(i.get('id'))
+        reply_keyboard[0].append(i.get('label'))
     update.message.reply_text('Select prefferable instance',
                               reply_markup=ReplyKeyboardMarkup(reply_keyboard,
                                                                one_time_keyboard=True,
@@ -141,8 +140,10 @@ def get_instance_list(update: Update, context: CallbackContext):
 
 # TODO: Make 
 def get_instance_properties(update: Update, context: CallbackContext):
-    reply_keyboard = [['List instances'], ['Cancel']]
-    text = json.dumps(instance_service.get_instance_info(update.message.text))
+    for i in instance_service.list_instances():
+        if update.message.text == i.get('label'):
+                text = instance_service.get_instance_info(i.get('id'))
+    reply_keyboard = [['Cancel']]
     update.message.reply_text(text,
                               reply_markup=ReplyKeyboardMarkup(
                                                                reply_keyboard,
