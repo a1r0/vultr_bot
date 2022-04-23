@@ -19,4 +19,6 @@ jobs:
         script: |
           echo "Setting up repo"  
           cd /var/vultr_bot &&
-          git pull
+          git pull &&
+          screen -wipe &&
+          screen -d -m python3 bot.py
