@@ -42,9 +42,12 @@ class Instance:
         print(data)
         return result
 
-# TODO: Instance info
+# TODO: Make human readable text
     @staticmethod
-    def get_instance_info(instance_id) -> dict:
+    def get_instance_info(instance_id):
         response = requests.get(URL + '/{}'.format(instance_id), headers=headers)
         data = json.loads(response.text)
-        return data
+        formatted_data = json.dumps(data.get('instance'), indent=2 ,sort_keys=True)
+        text = 'Here is instance properties \n' + formatted_data
+        newtext = text.replace('"', ' ' , len(text))
+        return newtext
