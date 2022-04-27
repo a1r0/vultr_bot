@@ -20,7 +20,7 @@ import plugins.user_service as user_service
 import plugins.instance_service as instance_service
 
 user_service = user_service.User()
-instance_service = instance_service.Instance()
+instance_service = instance_service.Instance(None,None)
 
 # Enable logging
 logging.basicConfig(
@@ -38,8 +38,6 @@ JSON_DATA = None
 def start(update: Update, context: CallbackContext) -> int:
     '''Send a message when the command /start is issued.'''
     reply_keyboard = [
-        ['Get bandwidth'],
-        ['Get profile info'],
         ['List instances'],
         ['Cancel']]
     update.message.reply_text(
@@ -65,7 +63,6 @@ def cancel(update: Update, context: CallbackContext) -> int:
 
 def get_profile_info(update: Update, context: CallbackContext) -> int:
     reply_keyboard = [['Get bandwidth', 'Cancel']]
-    logger.info('Getting user info')
     update.message.reply_text(
         f'{user_service.get_user_email()}\n{user_service.get_user_name()}\n{user_service.get_user_userid()}',
         reply_markup=ReplyKeyboardRemove())
@@ -76,26 +73,10 @@ def get_profile_info(update: Update, context: CallbackContext) -> int:
 
 
 def get_vultr_info(update: Update, context: CallbackContext) -> int:
-    logger.info('Method get_vultr was executed')
-    url = 'https://api.vultr.com/v2/instances/{}/bandwidth'.format(
-        cfg.api_keys['INSTANCE_ID'])
-    headers = {'Authorization': 'Bearer {}'.format(cfg.api_keys['VULTR_KEY']),
-               'Content-Type': 'application/json'}
-
-    data = {
-        'bandwidth': {
-            'server_time': {
-                'incoming_bytes': '',
-                'outgoing_bytes': ''
-            }
-        }
-    }
-    response = requests.get(url, data=json.dumps(data), headers=headers)
-    global JSON_DATA
-    JSON_DATA = response.json()
-    reply_keyboard = [[]]
-    for i in JSON_DATA['bandwidth']:
-        reply_keyboard.append([i])
+    bandwidth = instance_service.get_instance_bandwidth(instance_service.id)['bandwidth']
+    reply_keyboard = []
+    for date in bandwidth.keys():
+        reply_keyboard.append([date])
     update.message.reply_text('Select the date of bandwidth usage', reply_markup=ReplyKeyboardMarkup(
         reply_keyboard, one_time_keyboard=True, input_field_placeholder='Select date of usage:')
     )
@@ -104,16 +85,15 @@ def get_vultr_info(update: Update, context: CallbackContext) -> int:
 
 
 def convert_data(update: Update, context: CallbackContext) -> int:
-    global JSON_DATA
-    global incoming_bytes
-    global outcoming_bytes
-    reply_keyboard = [['Get bandwidth', 'Get profile info', 'Cancel']]
-    logger.info('Method convert_data was executed')
-    data = update.message.text
-    for i in JSON_DATA['bandwidth']:
-        if data == i:
-            incoming_bytes = JSON_DATA['bandwidth'][str(i)]['incoming_bytes']
-            outcoming_bytes = JSON_DATA['bandwidth'][str(i)]['outgoing_bytes']
+    incoming_bytes = None
+    outcoming_bytes = None
+    reply_keyboard = [['Cancel']]
+    date = update.message.text
+    bandwidth = instance_service.get_instance_bandwidth(instance_service.id)['bandwidth']
+    for i in bandwidth.keys():
+        if date == i:
+            incoming_bytes = bandwidth[str(i)]['incoming_bytes']
+            outcoming_bytes = bandwidth[str(i)]['outgoing_bytes']
             update.message.reply_text(
                 '⬇️ ' + hurry.filesize.size(incoming_bytes, system=hurry.filesize.verbose) + ' \n' +
                 '⬆️ ' +
@@ -140,10 +120,12 @@ def get_instance_list(update: Update, context: CallbackContext):
 
 # TODO: Make 
 def get_instance_properties(update: Update, context: CallbackContext):
+    instance_service.label = update.message.text
     for i in instance_service.list_instances():
-        if update.message.text == i.get('label'):
+        if instance_service.label == i.get('label'):
                 text = instance_service.get_instance_info(i.get('id'))
-    reply_keyboard = [['Cancel']]
+                instance_service.id = i.get('id')
+    reply_keyboard = [['Get bandwidth'],['Cancel']]
     update.message.reply_text(text,
                               reply_markup=ReplyKeyboardMarkup(
                                                                reply_keyboard,
