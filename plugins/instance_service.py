@@ -1,6 +1,7 @@
 import json
 import requests
 import vps_config as cfg
+""" This module has an methods which helps to fetch data from api """
 
 URL = 'https://api.vultr.com/v2/'
 headers = {'Authorization': 'Bearer {}'.format(cfg.api_keys['VULTR_KEY']),
@@ -39,11 +40,11 @@ class Instance:
         return bandwidth
 
 # TODO: Make human readable text
-    @staticmethod
-    def get_instance_info(instance_id):
+    def get_instance_info(self , instance_id):
         response = requests.get(URL + 'instances/{}'.format(instance_id), headers=headers)
         data = json.loads(response.text)
         # formatted_data = json.dumps(data.get('instance'), indent=2 ,sort_keys=True)
         # text = 'Here is instance properties \n' + formatted_data
         # newtext = text.replace('"', ' ' , len(text))
         return data
+        
