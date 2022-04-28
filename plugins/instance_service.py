@@ -35,13 +35,13 @@ class Instance:
 
     @staticmethod
     def get_instance_bandwidth(instance_id):
-        response = requests.get(URL + 'instances/{}/bandwidth'.format(instance_id),headers=headers)
+        response = requests.get(URL + f'instances/{instance_id}/bandwidth',headers=headers)
         bandwidth = json.loads(response.text)
         return bandwidth
 
 # TODO: Make human readable text
     def get_instance_info(self , instance_id):
-        response = requests.get(URL + 'instances/{}'.format(instance_id), headers=headers)
+        response = requests.get(URL + f'instances/{instance_id}', headers=headers)
         data = json.loads(response.text)
         # formatted_data = json.dumps(data.get('instance'), indent=2 ,sort_keys=True)
         # text = 'Here is instance properties \n' + formatted_data
