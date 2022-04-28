@@ -62,7 +62,7 @@ def cancel(update: Update, context: CallbackContext) -> int:
     return ConversationHandler.END
 
 
-def get_profile_info(update: Update, context: CallbackContext) -> int:
+def get_user_profile_info(update: Update, context: CallbackContext) -> int:
     reply_keyboard = [['Get bandwidth', 'Cancel']]
     update.message.reply_text(
         f'{user_service.get_user_email()}',
@@ -76,7 +76,7 @@ def get_profile_info(update: Update, context: CallbackContext) -> int:
     return GET_BANDWIDTH
 
 
-def get_vultr_info(update: Update, context: CallbackContext) -> int:
+def get_instance_bandwidth_info(update: Update, context: CallbackContext) -> int:
     bandwidth = instance_service.get_instance_bandwidth(instance_service.id)[
         'bandwidth']
     reply_keyboard = []
@@ -93,7 +93,7 @@ def get_vultr_info(update: Update, context: CallbackContext) -> int:
     return CONVERT_DATA
 
 
-def convert_data(update: Update, context: CallbackContext) -> int:
+def convert_bandwidth_data(update: Update, context: CallbackContext) -> int:
     reply_keyboard = [['Cancel']]
     date = update.message.text
     bandwidth = instance_service.get_instance_bandwidth(instance_service.id)[
@@ -115,7 +115,7 @@ def convert_data(update: Update, context: CallbackContext) -> int:
                                          input_field_placeholder=''))
     return GET_BANDWIDTH
 
-def get_instance_list(update: Update, context: CallbackContext):
+def list_instances(update: Update, context: CallbackContext):
     reply_keyboard = [[], ['Cancel']]
     for i in instance_service.list_instances():
         reply_keyboard[0].append(i.get('label'))
@@ -155,25 +155,25 @@ def main() -> None:
         states={
             GET_BANDWIDTH: [
                 MessageHandler(Filters.regex(
-                    r'^(Get profile info)$'), get_profile_info),
+                    r'^(Get profile info)$'), get_user_profile_info),
                 MessageHandler(Filters.regex(
-                    r'^(Get bandwidth)$'), get_vultr_info),
+                    r'^(Get bandwidth)$'), get_instance_bandwidth_info),
                 MessageHandler(Filters.regex(
-                    r'^(List instances)$'), get_instance_list),
+                    r'^(List instances)$'), list_instances),
                 MessageHandler(Filters.regex(r'^(Cancel)$'), cancel),
                 MessageHandler(Filters.regex(r'(\w+)'), get_instance_properties)
             ],
 
             CONVERT_DATA: [MessageHandler(Filters.regex(
                 r'^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$'
-            ), convert_data)],
+            ), convert_bandwidth_data)],
         },
         fallbacks=[CommandHandler('cancel', cancel)],
     )
 
-    dispatcher.add_handler(CommandHandler('get_vultr_info', get_vultr_info))
+    dispatcher.add_handler(CommandHandler('get_vultr_info', get_instance_bandwidth_info))
     dispatcher.add_handler(CommandHandler(
-        'get_profile_info', get_profile_info))
+        'get_profile_info', get_user_profile_info))
     dispatcher.add_handler(conv_handler)
 
     # Start the Bot
