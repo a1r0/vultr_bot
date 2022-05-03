@@ -28,8 +28,8 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-GET_BANDWIDTH, CONVERT_DATA, GET_PROFILE_INFO = range(3)
-JSON_DATA = None
+# States of conversation while user navigates trough chat
+MAIN, CONVERT_DATA, INSTANCES , INSTANCE = range(4)
 
 
 # Define a few command handlers. These usually take the two arguments update and
@@ -37,9 +37,9 @@ JSON_DATA = None
 def start(update: Update, context: CallbackContext) -> int:
     '''Send a message when the command /start is issued.'''
     reply_keyboard = [
-        ['Create instance'],
+        # ['Create instance'],
         ['List instances'],
-        ['Remove instance'],
+        # ['Remove instance'],
         ['Cancel']]
     update.message.reply_text(
         'Hi! I am admin here. I will hold a conversation with you. '
@@ -49,19 +49,19 @@ def start(update: Update, context: CallbackContext) -> int:
             reply_keyboard, one_time_keyboard=True, input_field_placeholder=''
         ),
     )
-    return GET_BANDWIDTH
+    return MAIN
+
 
 def cancel(update: Update, context: CallbackContext) -> int:
     '''Cancels and ends the conversation.'''
     user = update.message.from_user
-    logger.info('User %s canceled the conversation.', user.first_name)
     update.message.reply_text(
         'Bye! I hope we can talk again some day.', reply_markup=ReplyKeyboardRemove()
     )
 
     return ConversationHandler.END
 
-
+# TODO implement User service
 def get_user_profile_info(update: Update, context: CallbackContext) -> int:
     reply_keyboard = [['Get bandwidth', 'Cancel']]
     update.message.reply_text(
@@ -73,7 +73,6 @@ def get_user_profile_info(update: Update, context: CallbackContext) -> int:
             reply_keyboard,
             one_time_keyboard=True,
             input_field_placeholder=''))
-    return GET_BANDWIDTH
 
 
 def get_instance_bandwidth_info(update: Update, context: CallbackContext) -> int:
@@ -85,16 +84,16 @@ def get_instance_bandwidth_info(update: Update, context: CallbackContext) -> int
     update.message.reply_text(
         'Select the date of bandwidth usage',
         reply_markup=ReplyKeyboardMarkup(
-                                        reply_keyboard,
-                                        one_time_keyboard=True,
-                                        input_field_placeholder='Select date of usage:')
+            reply_keyboard,
+            one_time_keyboard=True,
+            input_field_placeholder='Select date of usage:')
     )
 
-    return CONVERT_DATA
+    return INSTANCE
 
 
 def convert_bandwidth_data(update: Update, context: CallbackContext) -> int:
-    reply_keyboard = [['Cancel']]
+    reply_keyboard = [['Get bandwidth'],['Back to main']]
     date = update.message.text
     bandwidth = instance_service.get_instance_bandwidth(instance_service.id)[
         'bandwidth']
@@ -113,33 +112,40 @@ def convert_bandwidth_data(update: Update, context: CallbackContext) -> int:
         reply_markup=ReplyKeyboardMarkup(reply_keyboard,
                                          one_time_keyboard=True,
                                          input_field_placeholder=''))
-    return GET_BANDWIDTH
+    return MAIN
+
 
 def list_instances(update: Update, context: CallbackContext):
-    reply_keyboard = [[], ['Cancel']]
+    reply_keyboard = [[]]
     for i in instance_service.list_instances():
         reply_keyboard[0].append(i.get('label'))
     update.message.reply_text('Select prefferable instance',
                               reply_markup=ReplyKeyboardMarkup(reply_keyboard,
                                                                one_time_keyboard=True,
                                                                input_field_placeholder=''))
-    return GET_BANDWIDTH
+    return INSTANCES
 
 
 def get_instance_properties(update: Update, context: CallbackContext):
     instance_service.label = update.message.text
+    reply_keyboard = [['Get bandwidth']]
     for i in instance_service.list_instances():
         if instance_service.label == i.get('label'):
             text = instance_service.get_instance_info(i.get('id'))
             instance_service.id = i.get('id')
-    reply_keyboard = [['Get bandwidth'], ['Cancel']]
-    update.message.reply_text(text,
-                              reply_markup=ReplyKeyboardMarkup(
-                                  reply_keyboard,
-                                  one_time_keyboard=True,
-                                  input_field_placeholder=''))
-    return GET_BANDWIDTH
+            update.message.reply_text(text,
+                                      reply_markup=ReplyKeyboardMarkup(
+                                          reply_keyboard,
+                                          one_time_keyboard=True,
+                                          input_field_placeholder=''))
+        else:
+            update.message.reply_text('Unexpected error',
+                                      reply_markup=ReplyKeyboardMarkup(
+                                          reply_keyboard,
+                                          one_time_keyboard=True,
+                                          input_field_placeholder=''))
 
+    return INSTANCE
 
 def main() -> None:
     '''Start the bot.'''
@@ -153,27 +159,30 @@ def main() -> None:
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start)],
         states={
-            GET_BANDWIDTH: [
+            MAIN: [
+                MessageHandler(Filters.regex(r'^(Back to main)$') , start),
                 MessageHandler(Filters.regex(
-                    r'^(Get profile info)$'), get_user_profile_info),
+                    r'^(List instances)$'), list_instances),
+            ],
+
+            INSTANCES:
+            [
+                MessageHandler(Filters.regex(r'(\w+)'),get_instance_properties),
+            ],
+
+            INSTANCE: [
                 MessageHandler(Filters.regex(
                     r'^(Get bandwidth)$'), get_instance_bandwidth_info),
                 MessageHandler(Filters.regex(
-                    r'^(List instances)$'), list_instances),
-                MessageHandler(Filters.regex(r'^(Cancel)$'), cancel),
-                MessageHandler(Filters.regex(r'(\w+)'), get_instance_properties)
+                    r'^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$'),
+                    convert_bandwidth_data),
             ],
-
-            CONVERT_DATA: [MessageHandler(Filters.regex(
-                r'^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$'
-            ), convert_bandwidth_data)],
         },
-        fallbacks=[CommandHandler('cancel', cancel)],
+        fallbacks=[
+            CommandHandler('cancel', cancel)
+        ],
     )
 
-    dispatcher.add_handler(CommandHandler('get_vultr_info', get_instance_bandwidth_info))
-    dispatcher.add_handler(CommandHandler(
-        'get_profile_info', get_user_profile_info))
     dispatcher.add_handler(conv_handler)
 
     # Start the Bot
