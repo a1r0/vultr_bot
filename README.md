@@ -3,6 +3,8 @@
 ![GitHub last commit](https://img.shields.io/github/last-commit/a1r0/vultr_bot)
 ![GitHub Workflow Status](https://img.shields.io/github/workflow/status/a1r0/vultr_bot/Deploy)
 
+This bot manages a specific VPS and supports basic operations like showing bandwidth data usage , server CPU and RAM usage , shutdown and startup operations. 
+
 ## Installation procedure on Linux and Windows
 
 1. Setup python language on youre machine first.
