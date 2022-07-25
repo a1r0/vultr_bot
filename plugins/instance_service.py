@@ -44,12 +44,8 @@ class Instance:
         bandwidth = json.loads(response.text)
         return bandwidth
 
-# TODO: Make human readable text
     def get_instance_info(self , instance_id):
         """ Returns non-formated instance properties """
         response = requests.get(URL + f'instances/{instance_id}', headers=headers)
         data = json.loads(response.text)
-        # formatted_data = json.dumps(data.get('instance'), indent=2 ,sort_keys=True)
-        # text = 'Here is instance properties \n' + formatted_data
-        # newtext = text.replace('"', ' ' , len(text))
-        return data
+        return data['instance']
