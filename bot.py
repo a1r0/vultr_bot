@@ -128,10 +128,11 @@ def list_instances(update: Update, context: CallbackContext):
 
 def get_instance_properties(update: Update, context: CallbackContext):
     instance_service.label = update.message.text
-    reply_keyboard = [['Get bandwidth']]
+    reply_keyboard = [['Get bandwidth'],['Back to main']]
     for i in instance_service.list_instances():
         if instance_service.label == i.get('label'):
-            text = instance_service.get_instance_info(i.get('id'))
+            # text = instance_service.get_instance_info(i.get('id'))
+            text = "Choose preferrable methods of your instance"
             instance_service.id = i.get('id')
             update.message.reply_text(text,
                                       reply_markup=ReplyKeyboardMarkup(
@@ -163,11 +164,13 @@ def main() -> None:
                 MessageHandler(Filters.regex(r'^(Back to main)$') , start),
                 MessageHandler(Filters.regex(
                     r'^(List instances)$'), list_instances),
+                MessageHandler(Filters.regex(r'^(Cancel)$') , cancel),
             ],
 
             INSTANCES:
             [
                 MessageHandler(Filters.regex(r'(\w+)'),get_instance_properties),
+                MessageHandler(Filters.regex(r'^(Back to main)$') , start),
             ],
 
             INSTANCE: [
@@ -176,6 +179,7 @@ def main() -> None:
                 MessageHandler(Filters.regex(
                     r'^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$'),
                     convert_bandwidth_data),
+                MessageHandler(Filters.regex(r'^(Back to main)$') , start)
             ],
         },
         fallbacks=[
