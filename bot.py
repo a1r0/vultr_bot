@@ -15,8 +15,8 @@ from telegram.ext import (
     ConversationHandler
 )
 import vps_config as cfg
-import plugins.user_service as user_service
-import plugins.instance_service as instance_service
+import services.user_service as user_service
+import services.instance_service as instance_service
 
 user_service = user_service.User()
 instance_service = instance_service.Instance(None, None)
@@ -29,7 +29,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # States of conversation while user navigates trough chat
-MAIN, CONVERT_DATA, INSTANCES , INSTANCE = range(4)
+MAIN, CONVERT_DATA, INSTANCES , INSTANCE , USER_MANAGEMENT , USER= range(6)
 
 
 # Define a few command handlers. These usually take the two arguments update and
@@ -37,16 +37,15 @@ MAIN, CONVERT_DATA, INSTANCES , INSTANCE = range(4)
 def start(update: Update, context: CallbackContext) -> int:
     '''Send a message when the command /start is issued.'''
     reply_keyboard = [
-        # ['Create instance'],
-        ['List instances'],
-        # ['Remove instance'],
+        ['User management'],
+        ['Instance management'],
         ['Cancel']]
     update.message.reply_text(
         'Hi! I am admin here. I will hold a conversation with you. '
         'Send /cancel to stop talking to me.\n\n'
         'Wnat do you want for today? ',
         reply_markup=ReplyKeyboardMarkup(
-            reply_keyboard, one_time_keyboard=True, input_field_placeholder=''
+            reply_keyboard, one_time_keyboard=True
         ),
     )
     return MAIN
@@ -62,17 +61,41 @@ def cancel(update: Update, context: CallbackContext) -> int:
     return ConversationHandler.END
 
 # TODO implement User service
-def get_user_profile_info(update: Update, context: CallbackContext) -> int:
-    reply_keyboard = [['Get bandwidth', 'Cancel']]
-    update.message.reply_text(
-        f'{user_service.get_user_email()}',
-        reply_markup=ReplyKeyboardRemove())
-    update.message.reply_text(
-        'Wanna finish or take another measure ?',
-        reply_markup=ReplyKeyboardMarkup(
-            reply_keyboard,
-            one_time_keyboard=True,
-            input_field_placeholder=''))
+def start_user_menu(update: Update , context: CallbackContext) -> int:
+    reply_keyboard = [
+        ['List active users'],
+        # ['Create user'],
+        ['Back to main']]
+    update.message.reply_text('Select prefferable menu', reply_markup=ReplyKeyboardMarkup(reply_keyboard , one_time_keyboard=True))
+    return USER_MANAGEMENT
+
+def start_instance_menu(update: Update , context: CallbackContext) -> int:
+    reply_keyboard = [
+        # ['Create instance'] , 
+        ['List instances'] ,
+        # ['Remove instance']
+        ]
+    update.message.reply_text('Select what do you want to do', reply_markup=ReplyKeyboardMarkup(reply_keyboard , one_time_keyboard=True))
+    return INSTANCES
+
+def list_active_users(update: Update , context: CallbackContext) -> int:
+    userlist = user_service.get_user_list()
+    reply_keyboard = [['User management']]
+    for i in userlist:
+        reply_keyboard.append([i['name']])
+    update.message.reply_text('Select which user to modify', reply_markup=ReplyKeyboardMarkup(reply_keyboard , one_time_keyboard=True))
+    return USER
+
+    
+# TODO implement getting user info by inique id
+def get_user_menu(update: Update , context: CallbackContext) -> int:
+    reply_keyboard = [
+        ['Update user'] , 
+        ['Delete user'] , 
+        ['Get detailed information'], 
+        ['User management']]
+    update.message.reply_text('Under development 😥', reply_markup=ReplyKeyboardMarkup(reply_keyboard , one_time_keyboard=True))
+    return USER
 
 
 def get_instance_bandwidth_info(update: Update, context: CallbackContext) -> int:
@@ -112,7 +135,7 @@ def convert_bandwidth_data(update: Update, context: CallbackContext) -> int:
         reply_markup=ReplyKeyboardMarkup(reply_keyboard,
                                          one_time_keyboard=True,
                                          input_field_placeholder=''))
-    return MAIN
+    return INSTANCE
 
 
 def list_instances(update: Update, context: CallbackContext):
@@ -123,7 +146,7 @@ def list_instances(update: Update, context: CallbackContext):
                               reply_markup=ReplyKeyboardMarkup(reply_keyboard,
                                                                one_time_keyboard=True,
                                                                input_field_placeholder=''))
-    return INSTANCES
+    return INSTANCE
 
 
 def get_instance_properties(update: Update, context: CallbackContext):
@@ -163,24 +186,37 @@ def main() -> None:
             MAIN: [
                 MessageHandler(Filters.regex(r'^(Back to main)$') , start),
                 MessageHandler(Filters.regex(
-                    r'^(List instances)$'), list_instances),
+                    r'^(User management)$'), start_user_menu),
+                MessageHandler(Filters.regex(
+                    r'^(Instance management)$'), start_instance_menu),
                 MessageHandler(Filters.regex(r'^(Cancel)$') , cancel),
             ],
 
             INSTANCES:
-            [
-                MessageHandler(Filters.regex(r'(\w+)'),get_instance_properties),
+            [   
+                MessageHandler(Filters.regex(
+                    r'^(List instances)$'), list_instances),
+                
                 MessageHandler(Filters.regex(r'^(Back to main)$') , start),
             ],
 
             INSTANCE: [
                 MessageHandler(Filters.regex(
                     r'^(Get bandwidth)$'), get_instance_bandwidth_info),
+                MessageHandler(Filters.regex(r'^(Back to main)$') , start),
                 MessageHandler(Filters.regex(
                     r'^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$'),
                     convert_bandwidth_data),
+                MessageHandler(Filters.regex(r'(\w+)'),get_instance_properties)
+            ],
+            USER_MANAGEMENT: [
+                MessageHandler(Filters.regex(
+                    r'^(List active users)$'), list_active_users),
+                MessageHandler(Filters.regex(
+                    r'^(User management)$'), start_user_menu),
                 MessageHandler(Filters.regex(r'^(Back to main)$') , start)
             ],
+            USER: [MessageHandler(Filters.regex(r'(\w+)'),get_user_menu)]
         },
         fallbacks=[
             CommandHandler('cancel', cancel)
